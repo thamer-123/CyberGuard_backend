@@ -1,9 +1,27 @@
+function criticalVerdict(reason) {
+  return {
+    score: 100,
+    status: "dangerous",
+    reasons: [reason],
+  };
+}
+
 function calculateRisk(data) {
+  // =====================================
+  // Critical Threat Intelligence
+  // =====================================
+
+  if (data.threatIntel?.listed) {
+    return criticalVerdict("Domain was found in OpenPhish");
+  }
+
+  // =====================================
+  // Heuristic Scoring
+  // =====================================
+
   let score = 0;
 
   const reasons = [];
-
-  // Domain Age Analysis
 
   if (data.reputation.ageDays < 30) {
     score += 25;
@@ -17,14 +35,16 @@ function calculateRisk(data) {
     reasons.push("Domain has an established history");
   }
 
+  score = Math.min(score, 100);
+
   let status;
 
   if (score >= 80) {
-    status = "dangerous";
+    status = "Dangerous";
   } else if (score >= 40) {
-    status = "warning";
+    status = "Warning";
   } else {
-    status = "safe";
+    status = "Safe";
   }
 
   return {

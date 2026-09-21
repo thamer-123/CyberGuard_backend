@@ -2,12 +2,15 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const app = express();
 
 const {
   calculateRisk
 } = require("./analysis/riskEngine");
 
-const app = express();
+const{
+  checkOpenPhish
+}=require("./services/openPhiService")
 
 app.use(cors());
 app.use(express.json());
@@ -29,10 +32,15 @@ const { getDomainInfo } = require("./services/whoisService");
 app.get("/api/analyze/:domain", async (req, res) => {
   try {
     const domainInfo = await getDomainInfo(req.params.domain);
+    const openPhiData= await checkOpenPhish(req.params.domain);
 
-    const riskAnalysis = calculateRisk({reputation: domainInfo});
+    const riskAnalysis = calculateRisk({
+      reputation: domainInfo,
+      threatIntel: openPhiData
+    });
 
     res.json({
+      analyzedAt: new Date().toISOString(),
       reputation: domainInfo,
       risk: riskAnalysis
     });
